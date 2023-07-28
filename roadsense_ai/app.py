@@ -39,7 +39,6 @@ class DriverAidSystem:
 
         self.tracking_thread = threading.Thread(target=self.track, daemon=True)
         self.webcam_thread = threading.Thread(target=self.gui.show_webcam_feed, args=(self.cap,), daemon=True)
-        self.start()
 
     
     def start(self):
