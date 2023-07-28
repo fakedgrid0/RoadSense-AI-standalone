@@ -1,17 +1,17 @@
 import sys
 import time
-from GUI import GUI
-from voice_engine import voice_engine
-from drowsiness_detection import drowsiness_detection
-from head_pose_estimation import head_pose_estimation
-from responses import responses
+from .GUI import GUI
+from .voice_engine import voice_engine
+from .drowsiness_detection import drowsiness_detection
+from .head_pose_estimation import head_pose_estimation
+from . import responses
 import cv2
 import random
 import threading
 
 
 def get_audio(detection_type: str):
-    audio = random.choice(responses[detection_type])
+    audio = random.choice(responses.responses[detection_type])
     return audio
 
 
