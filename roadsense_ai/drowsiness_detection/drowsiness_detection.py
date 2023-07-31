@@ -86,6 +86,13 @@ class DrowsinessDetector:
         self.facemesh_model = get_face_mesh()
 
 
+    def update_ear_thresh(self, new_value):
+        self.EAR_THRESH = new_value
+
+    def update_wait_time(self, new_value):
+        self.WAIT_TIME = new_value
+
+
     def run(self, image: np.array):
         # This function is used to implement our Drowsy detection algorithm
         image = process_image(image)
@@ -111,7 +118,7 @@ class DrowsinessDetector:
 
                 if self.d_time >= self.WAIT_TIME:
                     self.play_alarm = True
-                    plot_text(image, "WAKE UP! WAKE UP", ALM_txt_pos, (255, 0 , 0))
+                    # plot_text(image, "WAKE UP! WAKE UP", ALM_txt_pos, (255, 0 , 0))
 
             else:
                 self.start_time = time.perf_counter()
@@ -120,13 +127,13 @@ class DrowsinessDetector:
 
             EAR_txt = f"EAR: {round(EAR, 2)}"
             DROWSY_TIME_txt = f"DROWSY: {round(self.d_time, 3)} Secs"
-            plot_text(image, EAR_txt, self.EAR_txt_pos, (0, 255, 0))
-            plot_text(image, DROWSY_TIME_txt, DROWSY_TIME_txt_pos, (0, 255, 0))
+            # plot_text(image, EAR_txt, self.EAR_txt_pos, (0, 255, 0))
+            # plot_text(image, DROWSY_TIME_txt, DROWSY_TIME_txt_pos, (0, 255, 0))
 
         else:
             self.start_time = time.perf_counter()
             self.d_time = 0.0
             self.play_alarm = False
 
-
         return image, self.play_alarm
+        return self.play_alarm

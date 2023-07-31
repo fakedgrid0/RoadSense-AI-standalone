@@ -68,18 +68,23 @@ def plot_text(image, head_direction, x, y, z):
 
 class HeadPoseEstimator():
     def __init__(self) -> None:
+        self.WAIT_TIME = 1.0
+        self.OFFSET = 15
+        
         self.face_mesh = get_face_mesh()
         self.target_landmarks = [33, 263, 1, 61, 291, 199]
-        self.good_directions = ["Forward", "Up"]
-
+        self.good_directions = ["Forward"]
         self.play_alarm = False
-        
         self.forward_x = 0.0
         self.forward_y = 0.0
-
-        self.WAIT_TIME = 1.0
         self.d_time = 0.0
         self.start_time = time.perf_counter()
+
+    def update_wait_time(self, new_value):
+        self.WAIT_TIME = new_value
+    
+    def update_offset(self, new_value):
+        self.OFFSET = new_value
 
     def callibrate(self, image):
         image = process_image(image)
@@ -117,10 +122,10 @@ class HeadPoseEstimator():
             y = angles[1] * 360
             z = angles[2] * 360
         
-            head_direction = get_direction(self.forward_x, self.forward_y, x, y, offset=15)
+            head_direction = get_direction(self.forward_x, self.forward_y, x, y, offset=self.OFFSET)
             
             plot_nose_line(image, nose_2d, x, y)
-            plot_text(image, head_direction, x, y, z)
+            # plot_text(image, head_direction, x, y, z)
 
         #? How to handle no face detected errors more elegantly
         try:
@@ -149,5 +154,7 @@ class HeadPoseEstimator():
             self.start_time = time.perf_counter()
             self.d_time = 0.0
             self.play_alarm = False
+            
     
         return image, self.play_alarm
+        return self.play_alarm
