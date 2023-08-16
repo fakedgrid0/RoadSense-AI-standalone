@@ -21,6 +21,7 @@ class GUI:
 
         self.raw_view = True
         self.tracking_view = False
+        self.can_open_settings = True
         self.webcam_queue = []
         self.backend = backend
 
@@ -68,7 +69,7 @@ class GUI:
 
         config_options_label = tk.Label(self.sidebar, text="Configuration")
         config_options_label.pack(fill=tk.X)
-        settings_button = tk.Button(self.sidebar, text="Settings", command=self.open_settings)
+        settings_button = tk.Button(self.sidebar, text="Settings", command=self.on_open_settings)
         settings_button.pack(pady=10)
         help_btn = tk.Button(self.sidebar, text="Help", command=self.open_help)
         help_btn.pack(pady=10)
@@ -83,6 +84,7 @@ class GUI:
 
     def open_settings(self):
         """Open the settings window"""
+        self.can_open_settings = False
         self.settings_window = tk.Toplevel(self.root)
         self.settings_window.protocol("WM_DELETE_WINDOW", self.on_close_settings)
         self.settings_window.geometry("400x600")
@@ -180,9 +182,14 @@ class GUI:
             self.raw_view = False
             self.tracking_view = True
 
+    def on_open_settings(self):
+        if self.can_open_settings:
+            self.open_settings()
+
     def on_close_settings(self):
         self.update_vars()
         self.settings_window.destroy()
+        self.can_open_settings = True
 
     def on_close_program(self):
         self.backend.terminate_threads()
@@ -197,13 +204,10 @@ class GUI:
             if self.backend.start_webcam:
 
                 if self.raw_view:
-                    print("raw view condition reached")
                     _, frame = cap.read()
                     frame = cv2.flip(frame, 1)
-                    # frame = cv2.resize(frame, (self.video_label.winfo_width(), self.video_label.winfo_height()))
 
                 elif self.tracking_view:
-                    print("tracking view condition reached")
                     if self.webcam_queue:
                         frame = self.webcam_queue[0]
                         self.webcam_queue.pop(0)
@@ -224,8 +228,3 @@ class GUI:
             self.root.mainloop()
         except AttributeError:
             pass
-
-#! Multiple threads not optimized enough
-
-#TODO Port to Android if possible
-

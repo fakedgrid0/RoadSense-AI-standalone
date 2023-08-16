@@ -15,7 +15,7 @@ def get_audio(detection_type: str):
 
 
 class DriverAidSystem:
-    EAR_THRESH = 0.21
+    EAR_THRESH = 0.24
     DROWSINESS_WAIT_TIME = 0.9
     HEAD_POSE_WAIT_TIME = 0.7
     HEAD_POSE_OFFSET = 15
@@ -59,7 +59,7 @@ class DriverAidSystem:
                     # run detections on inp_frame
                     frame1, self.drowsiness_detect_bool = self.drowsiness_detector.run(inp_frame)
                     frame2, self.head_pose_detect_bool = self.head_pose_detector.run(inp_frame)
-
+                
                 except AttributeError:
                     break
 
@@ -70,10 +70,8 @@ class DriverAidSystem:
 
                 # check for detections
                 if self.drowsiness_detect_bool:
-                    print("Drowsy detected")
                     self.add_audio("drowsiness_detect")
                 if self.head_pose_detect_bool:
-                    print("Head pose detected")
                     self.add_audio("head_pose_detect")
 
                 if self.audio_list:
@@ -82,6 +80,7 @@ class DriverAidSystem:
                     with self.audio_lock:
                         self.voice_engine.speak(audio)
                         self.audio_list.clear()
+
 
     def add_audio(self, detection_type: str):
         with self.audio_lock:
@@ -94,10 +93,9 @@ class DriverAidSystem:
         try:
             self.voice_engine.engine.endLoop()
         except RuntimeError:
-            print("runtime endloop error")
+            pass
 
         self.voice_engine.speak("In 3,, 2,, 1")
-
         _, c_frame = self.cap.read()
         self.head_pose_detector.callibrate(c_frame)
         self.voice_engine.speak("The calibration was successful")

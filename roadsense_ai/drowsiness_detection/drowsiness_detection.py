@@ -63,9 +63,6 @@ def plot_eye_landmarks(image, left_lm_coordinates, right_lm_coordinates, color):
             for coord in lm_coordinates:
                 cv2.circle(image, coord, 2, color, -1)
 
-def plot_text(image, text, origin, color, font=cv2.FONT_HERSHEY_SIMPLEX, fntScale=0.8, thickness=2):
-    cv2.putText(image, text, origin, font, fntScale, color, thickness)
-
 
 class DrowsinessDetector:
     def __init__(self):
@@ -81,7 +78,6 @@ class DrowsinessDetector:
         self.start_time = time.perf_counter()
         self.d_time = 0.0
         self.play_alarm = False
-        self.EAR_txt_pos = (10, 30)
 
         self.facemesh_model = get_face_mesh()
 
@@ -92,15 +88,10 @@ class DrowsinessDetector:
     def update_wait_time(self, new_value):
         self.WAIT_TIME = new_value
 
-
+    # This function is used to implement our Drowsy detection algorithm
     def run(self, image: np.array):
-        # This function is used to implement our Drowsy detection algorithm
         image = process_image(image)
-
         img_h, img_w, _ = image.shape    
-        DROWSY_TIME_txt_pos = (10, int(img_h // 2 * 1.7))
-        ALM_txt_pos = (10, int(img_h // 2 * 1.85))
-
         results = self.facemesh_model.process(image)
 
         if results.multi_face_landmarks:
@@ -118,17 +109,11 @@ class DrowsinessDetector:
 
                 if self.d_time >= self.WAIT_TIME:
                     self.play_alarm = True
-                    # plot_text(image, "WAKE UP! WAKE UP", ALM_txt_pos, (255, 0 , 0))
 
             else:
                 self.start_time = time.perf_counter()
                 self.d_time = 0.0
                 self.play_alarm = False
-
-            EAR_txt = f"EAR: {round(EAR, 2)}"
-            DROWSY_TIME_txt = f"DROWSY: {round(self.d_time, 3)} Secs"
-            # plot_text(image, EAR_txt, self.EAR_txt_pos, (0, 255, 0))
-            # plot_text(image, DROWSY_TIME_txt, DROWSY_TIME_txt_pos, (0, 255, 0))
 
         else:
             self.start_time = time.perf_counter()
@@ -136,4 +121,3 @@ class DrowsinessDetector:
             self.play_alarm = False
 
         return image, self.play_alarm
-        return self.play_alarm

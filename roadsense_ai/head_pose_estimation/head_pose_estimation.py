@@ -59,12 +59,6 @@ def plot_nose_line(image, nose_2d, x, y):
     p2 = (int(nose_2d[0] + y * 10) , int(nose_2d[1] - x * 10))
     cv2.line(image, p1, p2, (255, 0, 0), 3)
 
-def plot_text(image, head_direction, x, y, z):
-    cv2.putText(image, head_direction, (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 2)
-    cv2.putText(image, "x: " + str(np.round(x,2)), (500, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-    cv2.putText(image, "y: " + str(np.round(y,2)), (500, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-    cv2.putText(image, "z: " + str(np.round(z,2)), (500, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-
 
 class HeadPoseEstimator():
     def __init__(self) -> None:
@@ -157,4 +151,3 @@ class HeadPoseEstimator():
             
     
         return image, self.play_alarm
-        return self.play_alarm
