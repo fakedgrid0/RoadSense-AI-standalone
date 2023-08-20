@@ -1,3 +1,4 @@
+import threading
 import tkinter as tk
 import cv2
 from PIL import Image, ImageTk
@@ -59,13 +60,6 @@ class GUI:
         for text, command in self.main_options_logic[state]:
             btn = tk.Button(self.sidebar, text=text, command=command)
             btn.pack(pady=10)
-
-        view_options_label = tk.Label(self.sidebar, text="View Options")
-        view_options_label.pack(fill=tk.X)
-        raw_view_btn = tk.Button(self.sidebar, text="Raw", command=self.on_raw_view_click)
-        raw_view_btn.pack(pady=10)
-        tracking_view_btn = tk.Button(self.sidebar, text="Tracker", command=self.on_tracking_view_click)
-        tracking_view_btn.pack(pady=10)
 
         config_options_label = tk.Label(self.sidebar, text="Configuration")
         config_options_label.pack(fill=tk.X)
@@ -149,15 +143,17 @@ class GUI:
         help_text.pack()
 
     def on_start_tracking_click(self):
+        self.tracking_view = True
+        self.raw_view = False
         self.backend.start_tracking = True
         self.backend.start_webcam = True
         self.create_sidebar("tracking")
 
     def on_stop_tracking_click(self):
+        self.tracking_view = False
+        self.raw_view = True
         self.backend.start_tracking = False
         self.backend.start_webcam = True
-        self.raw_view = True
-        self.tracking_view = False
         self.create_sidebar("start")
 
     def on_pause_tracking_click(self):
@@ -171,16 +167,9 @@ class GUI:
         self.create_sidebar("tracking")
 
     def on_callibrate_click(self):
-        self.backend.callibrate()
+        callibration_thread = threading.Thread(target=self.backend.callibrate, daemon=True)
+        callibration_thread.start()
 
-    def on_raw_view_click(self):
-        self.raw_view = True
-        self.tracking_view = False
-
-    def on_tracking_view_click(self):
-        if self.backend.start_tracking:
-            self.raw_view = False
-            self.tracking_view = True
 
     def on_open_settings(self):
         if self.can_open_settings:
@@ -206,6 +195,7 @@ class GUI:
                 if self.raw_view:
                     _, frame = cap.read()
                     frame = cv2.flip(frame, 1)
+                    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
                 elif self.tracking_view:
                     if self.webcam_queue:

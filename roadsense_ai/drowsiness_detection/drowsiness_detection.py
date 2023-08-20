@@ -65,7 +65,7 @@ def plot_eye_landmarks(image, left_lm_coordinates, right_lm_coordinates, color):
 
 
 class DrowsinessDetector:
-    def __init__(self):
+    def __init__(self, face_mesh):
         self.EAR_THRESH = 0.20
         self.WAIT_TIME = 1.0  # secs
 
@@ -79,7 +79,7 @@ class DrowsinessDetector:
         self.d_time = 0.0
         self.play_alarm = False
 
-        self.facemesh_model = get_face_mesh()
+        self.facemesh_model = face_mesh
 
 
     def update_ear_thresh(self, new_value):

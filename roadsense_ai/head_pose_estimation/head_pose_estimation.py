@@ -3,7 +3,6 @@ import mediapipe as mp
 import numpy as np
 import time
 
-
 def get_face_mesh(max_num_faces=1, min_detection_confidence=0.5, min_tracking_confidence=0.5):
     face_mesh    =  mp.solutions.face_mesh.FaceMesh(
                     max_num_faces=max_num_faces, 
@@ -14,7 +13,6 @@ def get_face_mesh(max_num_faces=1, min_detection_confidence=0.5, min_tracking_co
 
 def process_image(image):
     image = cv2.flip(image, 1)
-    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     image.flags.writeable = False 
     return image
 
@@ -58,14 +56,18 @@ def plot_nose_line(image, nose_2d, x, y):
     p1 = (int(nose_2d[0]), int(nose_2d[1]))
     p2 = (int(nose_2d[0] + y * 10) , int(nose_2d[1] - x * 10))
     cv2.line(image, p1, p2, (255, 0, 0), 3)
+    
 
-
-class HeadPoseEstimator():
-    def __init__(self) -> None:
+class HeadPoseEstimator:
+    def __init__(self, face_mesh) -> None:
         self.WAIT_TIME = 1.0
         self.OFFSET = 15
         
-        self.face_mesh = get_face_mesh()
+        self.face_mesh = face_mesh
+        self.mp_drawing = mp.solutions.drawing_utils
+        self.mp_drawing_styles = mp.solutions.drawing_styles
+        self.mp_face_mesh = mp.solutions.face_mesh
+        
         self.target_landmarks = [33, 263, 1, 61, 291, 199]
         self.good_directions = ["Forward"]
         self.play_alarm = False
@@ -97,14 +99,25 @@ class HeadPoseEstimator():
             landmarks = results.multi_face_landmarks[0].landmark
             for idx, lm in enumerate(landmarks):
                 if idx in self.target_landmarks:
-                    if idx == 1:
-                        nose_2d = (lm.x * img_w, lm.y * img_h)
-
                     x, y = int(lm.x * img_w), int(lm.y * img_h)
-
                     face_2d.append([x, y])
-                    face_3d.append([x, y, lm.z])       
-            
+                    face_3d.append([x, y, lm.z])
+        
+            # Extract coordinates of all face landmarks
+            all_landmarks = [landmark for landmarks in results.multi_face_landmarks for landmark in landmarks.landmark]
+
+            # Calculate bounding box
+            min_x = int(min(landmark.x for landmark in all_landmarks) * image.shape[1])
+            max_x = int(max(landmark.x for landmark in all_landmarks) * image.shape[1])
+            min_y = int(min(landmark.y for landmark in all_landmarks) * image.shape[0])
+            max_y = int(max(landmark.y for landmark in all_landmarks) * image.shape[0])
+
+            # Draw green bounding box
+            box_color = (0, 255, 0)  # Green color in BGR format
+            thickness = 2  # Line thickness
+            cv2.rectangle(image, (min_x, min_y), (max_x, max_y), box_color, thickness)
+
+
             # Convert it to the NumPy array
             face_2d = np.array(face_2d, dtype=np.float64)
             face_3d = np.array(face_3d, dtype=np.float64)
@@ -115,22 +128,25 @@ class HeadPoseEstimator():
             x = angles[0] * 360
             y = angles[1] * 360
             z = angles[2] * 360
-        
+
+        try:
             head_direction = get_direction(self.forward_x, self.forward_y, x, y, offset=self.OFFSET)
-            
-            plot_nose_line(image, nose_2d, x, y)
-            # plot_text(image, head_direction, x, y, z)
+        except TypeError:
+            head_direction = x = y = None
+        except UnboundLocalError:
+            head_direction = x = y = None
 
         #? How to handle no face detected errors more elegantly
-        try:
-            return head_direction, x, y
-        except UnboundLocalError:
-            return None, None, None
+    
+        return head_direction, x, y
         
         
     def run(self, image):
         image = process_image(image)
         head_direction, x, y = self.get_head_direction(image)
+        
+        if not (head_direction and x and y):
+            raise TypeError
         
         if head_direction:
             if head_direction not in self.good_directions:
@@ -149,5 +165,4 @@ class HeadPoseEstimator():
             self.d_time = 0.0
             self.play_alarm = False
             
-    
         return image, self.play_alarm
